@@ -40,8 +40,8 @@ fn main() {
     let mut poly_lagrange = poly_coeffs.clone();
     domain.fft_in_place(&mut poly_lagrange);
 
-    // Prover phase
-    // 5. Parallel witness generation with batched hashing
+    // Prover 
+    // Parallel witness generation with batched hashing
     let witness: Vec<ScalarField> = (0..N)
         .into_par_iter()
         .map_init(
@@ -54,20 +54,20 @@ fn main() {
         )
         .collect();
 
-    // 6. Optimized zero-padding with parallel extend
+    //  Optimized zero-padding with parallel extend
     let mut padded_witness = witness.clone();
     padded_witness.par_extend((0..N).into_par_iter().map(|_| ScalarField::zero()));
 
-    // 7. In-place FFT for witness
+    // In-place FFT for witness
     domain.fft_in_place(&mut padded_witness);
 
-    // 8. Parallel Hadamard product
+    //  Parallel Hadamard product
     let hadamard_product: Vec<ScalarField> = padded_witness.par_iter()
         .zip(poly_lagrange.par_iter())
         .map(|(&w, &p)| w * p)
         .collect();
 
-    // 9. Optimized MSM using arkworks' implementation
+    //Optimized MSM using arkworks' implementation
     let srs_affine: Vec<_> = srs_lagrange.iter().map(|p| p.into_affine()).collect();
     let commitment = G1::msm(&srs_affine, &hadamard_product)
         .expect("MSM failed");
